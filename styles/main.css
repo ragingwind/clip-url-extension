@@ -1,0 +1,23 @@
+body {
+  /*min-width: 500px;*/
+  margin:0;
+}
+
+div {
+  float:left;
+}
+
+.outter {
+  padding:10px;
+}
+
+.outter #url {
+  min-width:360px;
+}
+
+.options {
+  padding-left:10px;
+  padding-bottom:10px;
+  font-size: 0.8em;
+  display: none;
+}
