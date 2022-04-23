@@ -45,7 +45,7 @@ function updateAutocopyText() {
 function updateLinkText(selectedText) {
   linkTextFormats.forEach((format, idx) => {
     var text = format.replace('{{title}}', selectedText || linkInfo.title)
-        .replace('{{shortenUrl}}', linkInfo.shortenUrl);
+      .replace('{{shortenUrl}}', linkInfo.shortenUrl);
     var div = document.createElement('div');
     div.className = 'shortenUrl';
     div.style.cursor = 'pointer';
@@ -62,7 +62,7 @@ function updateLinkText(selectedText) {
 
       linkInfo.textFormat = idx;
       urls[linkInfo.textFormat].style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
-      chrome.storage.sync.set({textFormat: linkInfo.textFormat});
+      chrome.storage.sync.set({ textFormat: linkInfo.textFormat });
 
       copyToClipboard(linkInfo.textFormat);
     });
@@ -70,42 +70,41 @@ function updateLinkText(selectedText) {
     document.getElementById('url').appendChild(div);
   });
 }
+
 chrome.storage.sync.set({})
 
-document.addEventListener('DOMContentLoaded', function(event) {
-  var queryOpts = {currentWindow: true, active: true};
-  var port = chrome.runtime.connect({name: "shortern"});
-
-  port.onMessage.addListener(function(res) {
-    linkInfo.shortenUrl = res.shortUrl;
-    updateLinkText(res.selectedText);
-    updateAutocopyText();
-    showOptions();
-    // if (linkInfo.autocopy) {
-      copyToClipboard(linkInfo.textFormat);
-    // }
-  });
-
+document.addEventListener('DOMContentLoaded', function (event) {
   // Bind event for autocopy
-  document.getElementById('autocopy').addEventListener("click", function() {
+  document.getElementById('autocopy').addEventListener("click", function () {
     linkInfo.autocopy = !linkInfo.autocopy;
     // localforage.setItem('autocopy', linkInfo.autocopy);
     updateAutocopyText();
   });
 
   // Load link.textFormat index
-  chrome.storage.sync.get(function(val) {
+  chrome.storage.sync.get(function (val) {
     linkInfo.textFormat = val.textFormat === undefined ? 0 : val.textFormat;
-  })
+  });
 
-  // localforage.getItem('autocopy', function(err, val) {
-  //   linkInfo.autocopy = val === null ? false : val;
-  // });
+  chrome.tabs.query({ currentWindow: true, active: true }, (tabs) => {
+    chrome.scripting.executeScript({
+      target: {
+        tabId: tabs[0].id
+      },
+      func: () => {
+        return window.getSelection().toString();
+      }
+    }, (res) => {
+      const { result } = res[0];
 
-  // Query current activated tab info then request longUrl making shorten
-  chrome.tabs.query(queryOpts, function(tab) {
-    linkInfo.title = tab[0].title;
-    linkInfo.longUrl = tab[0].url;
-    port.postMessage({url: linkInfo.longUrl});
+      linkInfo.title = tabs[0].title;
+      linkInfo.longUrl = tabs[0].url;
+      linkInfo.shortenUrl = tabs[0].url;
+
+      updateLinkText(result);
+      updateAutocopyText();
+      showOptions();
+      copyToClipboard(linkInfo.textFormat);
+    });
   });
 });
