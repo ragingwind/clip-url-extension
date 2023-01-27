@@ -1,4 +1,5 @@
-'use strict';
+// firefox and safari use `browser` for web-extension APIs, chromium uses `chrome`
+var extension = typeof browser == 'undefined' ? chrome : browser;
 
 var linkTextFormats = [
   '{{shortenUrl}}',
@@ -23,6 +24,23 @@ function showOptions() {
   document.getElementsByClassName('options')[0].style.display = 'block';
 }
 
+async function saveOptions() {
+  try {
+    const textFormat = {
+      textFormat: linkInfo.textFormat
+    }
+
+    await extension.storage.local.set(textFormat);
+  } catch (e) {
+    console.log('error', e)
+  }
+}
+
+async function loadOptions() {
+  const { textFormat } = await extension.storage.local.get(["textFormat"]);
+  linkInfo.textFormat = Number(textFormat ?? 0);
+}
+
 function copyToClipboard(idx) {
   idx = !idx ? 0 : idx;
 
@@ -42,6 +60,16 @@ function updateAutocopyText() {
   document.getElementById('autocopy').innerText = 'autocopy is ' + (linkInfo.autocopy ? 'on' : 'off');
 }
 
+async function saveWithFormat(idx) {
+  const urls = document.querySelectorAll('.shortenUrl');
+  urls[linkInfo.textFormat].style.backgroundColor = 'white';
+
+  linkInfo.textFormat = idx;
+  urls[linkInfo.textFormat].style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
+
+  await saveOptions();
+}
+
 function updateLinkText(selectedText) {
   linkTextFormats.forEach((format, idx) => {
     var text = format.replace('{{title}}', selectedText || linkInfo.title)
@@ -56,38 +84,23 @@ function updateLinkText(selectedText) {
       div.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
     }
     div.textContent = `${text}`;
-    div.addEventListener('click', () => {
-      const urls = document.querySelectorAll('.shortenUrl');
-      urls[linkInfo.textFormat].style.backgroundColor = 'white';
-
-      linkInfo.textFormat = idx;
-      urls[linkInfo.textFormat].style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
-      chrome.storage.sync.set({ textFormat: linkInfo.textFormat });
-
-      copyToClipboard(linkInfo.textFormat);
-    });
+    div.addEventListener('click', async () => await saveWithFormat(idx));
 
     document.getElementById('url').appendChild(div);
   });
 }
 
-chrome.storage.sync.set({})
-
 document.addEventListener('DOMContentLoaded', function (event) {
   // Bind event for autocopy
   document.getElementById('autocopy').addEventListener("click", function () {
     linkInfo.autocopy = !linkInfo.autocopy;
-    // localforage.setItem('autocopy', linkInfo.autocopy);
     updateAutocopyText();
   });
 
-  // Load link.textFormat index
-  chrome.storage.sync.get(function (val) {
-    linkInfo.textFormat = val.textFormat === undefined ? 0 : val.textFormat;
-  });
+  loadOptions();
 
-  chrome.tabs.query({ currentWindow: true, active: true }, (tabs) => {
-    chrome.scripting.executeScript({
+  extension.tabs.query({ currentWindow: true, active: true }, (tabs) => {
+    extension.scripting.executeScript({
       target: {
         tabId: tabs[0].id
       },

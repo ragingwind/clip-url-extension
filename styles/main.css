@@ -15,9 +15,18 @@ div {
   min-width:360px;
 }
 
+#url div.shortenUrl {
+  padding-bottom: 4px;
+}
+
+#url div.shortenUrl::before {
+  content: "> ";
+}
+
 .options {
   padding-left:10px;
   padding-bottom:10px;
   font-size: 0.8em;
   display: none;
 }
+
