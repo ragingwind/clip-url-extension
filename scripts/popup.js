@@ -84,7 +84,10 @@ function updateLinkText(selectedText) {
       div.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
     }
     div.textContent = `${text}`;
-    div.addEventListener('click', async () => await saveWithFormat(idx));
+    div.addEventListener('click', async () => {
+      copyToClipboard(idx);
+      await saveWithFormat(idx)
+    });
 
     document.getElementById('url').appendChild(div);
   });
