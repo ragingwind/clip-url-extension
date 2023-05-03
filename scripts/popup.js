@@ -38,7 +38,7 @@ async function saveOptions() {
 
 async function loadOptions() {
   const { textFormat } = await extension.storage.local.get(["textFormat"]);
-  linkInfo.textFormat = Number(textFormat ?? 0);
+  linkInfo.textFormat = Number(Math.max(Math.min(textFormat, linkTextFormats.length - 1), 0));
 }
 
 function copyToClipboard(idx) {
