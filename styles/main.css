@@ -16,11 +16,17 @@ div {
 }
 
 #url div.shortenUrl {
+  width: 100%;
   padding-bottom: 4px;
+  font-size: 1em;
+}
+
+#url div.shortenUrl:hover {
+  background-color: #eee;
 }
 
 #url div.shortenUrl::before {
-  content: "> ";
+  content: "- ";
 }
 
 .options {
@@ -28,5 +34,9 @@ div {
   padding-bottom:10px;
   font-size: 0.8em;
   display: none;
+}
+
+.label {
+  font-weight: 800;
 }
 

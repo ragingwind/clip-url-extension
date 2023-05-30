@@ -2,19 +2,15 @@
 var extension = typeof browser == 'undefined' ? chrome : browser;
 
 var linkTextFormats = [
-  '{{shortenUrl}}',
-  '[{{title}}]({{shortenUrl}})',
-  '{{title}} - {{shortenUrl}}',
-  '{{title}}, {{shortenUrl}}',
-  '{{title}} / {{shortenUrl}}',
-  '{{title}}: {{shortenUrl}}'
+  '<span class="label">{{shortenUrl}}</span>',
+  '<span class="label">[{{title}}]</span>({{shortenUrl}})',
+  '<span class="label">{{title}}</span> - {{shortenUrl}}'
 ];
 
 var linkInfo = {
   title: '',
   longUrl: '',
   shortenUrl: '',
-  textFormat: 0,
   autocopy: true,
 };
 
@@ -22,18 +18,6 @@ var selectedShorten = 0;
 
 function showOptions() {
   document.getElementsByClassName('options')[0].style.display = 'block';
-}
-
-async function saveOptions() {
-  try {
-    const textFormat = {
-      textFormat: linkInfo.textFormat
-    }
-
-    await extension.storage.local.set(textFormat);
-  } catch (e) {
-    console.log('error', e)
-  }
 }
 
 async function loadOptions() {
@@ -60,19 +44,10 @@ function updateAutocopyText() {
   document.getElementById('autocopy').innerText = 'autocopy is ' + (linkInfo.autocopy ? 'on' : 'off');
 }
 
-async function saveWithFormat(idx) {
-  const urls = document.querySelectorAll('.shortenUrl');
-  urls[linkInfo.textFormat].style.backgroundColor = 'white';
-
-  linkInfo.textFormat = idx;
-  urls[linkInfo.textFormat].style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
-
-  await saveOptions();
-}
-
 function updateLinkText(selectedText) {
   linkTextFormats.forEach((format, idx) => {
-    var text = format.replace('{{title}}', selectedText || linkInfo.title)
+    var text = format
+      .replace('{{title}}', selectedText || linkInfo.title)
       .replace('{{shortenUrl}}', linkInfo.shortenUrl);
     var div = document.createElement('div');
     div.className = 'shortenUrl';
@@ -80,13 +55,9 @@ function updateLinkText(selectedText) {
     div.style.marginBottom = '10px';
     div.style.width = '100%;';
     div.dataset.idx = idx;
-    if (linkInfo.textFormat === idx) {
-      div.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
-    }
-    div.textContent = `${text}`;
+    div.innerHTML = `${text}`;
     div.addEventListener('click', async () => {
       copyToClipboard(idx);
-      await saveWithFormat(idx)
     });
 
     document.getElementById('url').appendChild(div);
